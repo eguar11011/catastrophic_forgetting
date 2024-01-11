@@ -1,24 +1,20 @@
 import torchvision
 from torchvision import transforms
-
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+
 import os
 
-from utils import save_tarjet_predictions
 
-num_fase = "completo"
+
+total_fase = 2 
 save_model = True
 load_model = False
 device = "cuda"
+data_dir = "../data" 
+batch_size = 500
 
-
-
-
-
-
-data_dir = "data" 
 
 # Conjunto de datos MNIST
 train_data = torchvision.datasets.MNIST(
@@ -27,7 +23,6 @@ train_data = torchvision.datasets.MNIST(
     download=True,
     transform=transforms.ToTensor()
 )
-
 eval_data = torchvision.datasets.MNIST(
     root=data_dir,
     train=False,
@@ -52,13 +47,13 @@ eval_indices_5_to_9 = [i for i in range(len(eval_data)) if eval_data.targets[i] 
 eval_0_to_4 = torch.utils.data.Subset(eval_data, eval_indices_0_to_4)
 eval_5_to_9 = torch.utils.data.Subset(eval_data, eval_indices_5_to_9)
  
-train_dataloader = DataLoader(train_data, batch_size=500, shuffle=True)
-train_0_to_4_dataloader = DataLoader(train_0_to_4, batch_size=500, shuffle=True)
-train_5_to_9_dataloader = DataLoader(train_5_to_9, batch_size=500, shuffle=True)
+train_dataloader = DataLoader(train_data, batch_size, shuffle=True)
+train_0_to_4_dataloader = DataLoader(train_0_to_4, batch_size, shuffle=True)
+train_5_to_9_dataloader = DataLoader(train_5_to_9, batch_size, shuffle=True)
 
-eval_0_to_4_dataloader = DataLoader(eval_0_to_4, batch_size=300, shuffle=True)
-
+#eval_0_to_4_dataloader = DataLoader(eval_0_to_4, batch_size, shuffle=True)
 eval_dataloader = DataLoader(eval_data, batch_size=10000, shuffle=True)
+print("Se cargaron los datos correctamente")
 #-----------------------------------------------------------------------------------------
 class NeuralNetwork(nn.Module):
     def __init__(self):
@@ -80,9 +75,8 @@ class NeuralNetwork(nn.Module):
 
 model = NeuralNetwork().to(device)
 
-if load_model: model.load_state_dict(torch.load(f'fase_1.pth')) ; print("Se cargo un modelo")
+if load_model: model.load_state_dict(torch.load(f'etapa_1.pth')) ; print("Se cargo un modelo")
 else: print("No se cargo ningun modelo")
-
 learning_rate = 1e-3
 # Initialize the loss function
 loss_fn = nn.CrossEntropyLoss()
@@ -111,13 +105,8 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             loss, current = loss.item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-    if save_model: torch.save(model.state_dict(), f'fase_{num_fase}.pth')
-    
-    
 
-
-
-def test_loop(dataloader, model, loss_fn,etapa):
+def test_loop(dataloader, model, loss_fn):
     # Set the model to evaluation mode - important for batch normalization and dropout layers
     # Unnecessary in this situation but added for best practices
     model.eval()
@@ -140,26 +129,40 @@ def test_loop(dataloader, model, loss_fn,etapa):
 
     test_loss /= num_batches
     correct /= size
+    log_accuracy_loss.append((100*correct, test_loss))
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-
-    with open(f'epoch_{etapa}_fase_{num_fase}.txt', 'w') as archivo:
+    with open(f'logs/epoch_{i}_fase_{t}.txt', 'w') as archivo:
             # Escribe el valor de la variable en el archivo
             archivo.write(str(tarjet_prediction))
-
     print(f'El valor prediciones se ha guardado en el archivo.txt')
     
 
 
-epochs = 25 
+epochs = 40
 data_1 = train_0_to_4_dataloader
 data_2 = train_5_to_9_dataloader
 data_t = train_dataloader
-for t in range(epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
-    train_loop(data_t, model, loss_fn, optimizer)
-    test_loop(eval_dataloader, model, loss_fn,t)
-    
-#torch.save(model.state_dict(), 'fase_2.pth')
+log_accuracy_loss = []
+for t in range(total_fase):
+    print("*" *250)
+    print(f"Etapa {t}")
+
+    for i in range(epochs):
+        if t == 0:
+            print(f"Epoch {i+1}\n-------------------------------")
+            train_loop(data_1, model, loss_fn, optimizer)
+            test_loop(eval_dataloader, model, loss_fn)
+        elif t == 1:
+            print(f"Epoch {i+1}\n-------------------------------")
+            train_loop(data_2, model, loss_fn, optimizer)
+            test_loop(eval_dataloader, model, loss_fn)
+
+        if save_model: torch.save(model.state_dict(), f'Fase_{t}.pth')
+
+with open(f'logs/log_accuracy_loss.txt', 'w') as archivo:
+        # Escribe el valor de la variable en el archivo
+        archivo.write(str(log_accuracy_loss))
+print(f'Se guardo correctamente el acurracy')
 
 print("Done!")
