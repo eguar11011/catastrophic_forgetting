@@ -2,3 +2,7 @@ data
 borrador
 basic
 __pycache__
+
+
+**/*.pth
+**/logs/
