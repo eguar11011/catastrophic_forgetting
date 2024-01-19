@@ -13,7 +13,7 @@ save_model = True
 load_model = False
 device = "cuda"
 data_dir = "../data" 
-batch_size = 500
+batch_size = 32
 
 
 # Conjunto de datos MNIST
@@ -119,7 +119,7 @@ def test_loop(dataloader, model, loss_fn):
     
 
 
-epochs = 40
+epochs = 10
 data_t = train_dataloader
 log_accuracy_loss = []
 for t in range(total_fase):
@@ -132,7 +132,7 @@ for t in range(total_fase):
             train_loop(data_t, model, loss_fn, optimizer)
             test_loop(eval_dataloader, model, loss_fn)
 
-        if save_model: torch.save(model.state_dict(), f'Fase_{t}.pth')
+    if save_model: torch.save(model.state_dict(), f'Fase_0.pth')
 
 
 with open(f'logs/log_accuracy_loss.txt', 'w') as archivo:
