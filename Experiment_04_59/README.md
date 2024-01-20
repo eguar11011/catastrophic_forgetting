@@ -16,8 +16,13 @@ Con los siguientes parametros:
 | loss_fn             | CrossEntropy                                |
 | optimizer           | SG                                          |
 
+## Experimentos base
+- Entrenar un modelo en dos fases como lo anterior mencionado.
 
-# ¿Que queremos analizar?
+En uno vamos a colocar que en cada fase entrene para 10 clases.
+En el otro vamos hacer que entrene para solo 5 clases y en la siguiente para 1o clases.
+
+## ¿Que queremos analizar?
 
 - Queremos ver si el clasificador se descuadra para las clases de la fase anterior.
 - Si aún puede clasificar con algún clasificador clases de la fase anterior y la fase realizada.
