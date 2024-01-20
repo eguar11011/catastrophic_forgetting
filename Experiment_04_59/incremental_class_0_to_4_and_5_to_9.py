@@ -131,7 +131,13 @@ def test_loop(dataloader, model, loss_fn):
     correct /= size
     log_accuracy_loss.append((100*correct, test_loss))
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    
 
+    # Definir la ruta del archivo
+    directorio= 'logs'
+    if not os.path.exists(directorio):
+        os.makedirs(directorio)
+    # Guardar tarjet_predictions    
     with open(f'logs/epoch_{i}_fase_{t}.txt', 'w') as archivo:
             # Escribe el valor de la variable en el archivo
             archivo.write(str(tarjet_prediction))
