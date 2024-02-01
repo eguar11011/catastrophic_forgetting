@@ -52,6 +52,7 @@ train_0_to_4_dataloader = DataLoader(train_0_to_4, batch_size, shuffle=True)
 train_5_to_9_dataloader = DataLoader(train_5_to_9, batch_size, shuffle=True)
 
 eval_0_to_4_dataloader = DataLoader(eval_0_to_4, batch_size, shuffle=True)
+eval_5_to_9_dataloader = DataLoader(eval_5_to_9, batch_size, shuffle=True)
 eval_dataloader = DataLoader(eval_data, batch_size=10000, shuffle=True)
 print("Se cargaron los datos correctamente")
 #-----------------------------------------------------------------------------------------
@@ -124,7 +125,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
-def test_loop(dataloader, model, loss_fn):
+def test_loop(dataloader, model, loss_fn, save=True):
     # Set the model to evaluation mode - important for batch normalization and dropout layers
     # Unnecessary in this situation but added for best practices
     model.eval()
@@ -155,20 +156,22 @@ def test_loop(dataloader, model, loss_fn):
     directorio= 'logs'
     if not os.path.exists(directorio):
         os.makedirs(directorio)
-    # Guardar tarjet_predictions    
-    with open(f'logs/epoch_{i}_fase_{t}_stack.txt', 'w') as archivo:
-            # Escribe el valor de la variable en el archivo
-            archivo.write(str(tarjet_prediction))
-    print(f'El valor prediciones se ha guardado en el archivo.txt')
+    # Guardar tarjet_predictions
+    if save:    
+        with open(f'logs/epoch_{i}_fase_{t}.txt', 'w') as archivo:
+                # Escribe el valor de la variable en el archivo
+                archivo.write(str(tarjet_prediction))
+        print(f'El valor prediciones se ha guardado en el archivo.txt')
     
 
 
 epochs_first = 6
-epochs_second = 10
+epochs_second = 6
 data_1 = train_0_to_4_dataloader
 data_2 = train_5_to_9_dataloader
 data_t = train_dataloader
 log_accuracy_loss = []
+
 for t in range(total_fase):
     print("*" *250); print(f"Etapa {t}");  print("*" *250)
 
@@ -180,9 +183,11 @@ for t in range(total_fase):
                 test_loop(eval_0_to_4_dataloader, model_first, loss_fn)
 
     elif t == 1:
-        actual = torch.load("Fase_0_stack.pth")
-        tensor_weight = torch.rand(5,512).to(device) 
-        tensor_bias = torch.rand(5).to(device) 
+
+        actual = torch.load("Fase_0.pth")
+        scaling_factor = 0.01 
+        tensor_weight = torch.rand(5,512).to(device)  *scaling_factor
+        tensor_bias = torch.rand(5).to(device) *scaling_factor
         actual["linear_relu_stack.4.weight"] = torch.cat((actual["linear_relu_stack.4.weight"],tensor_weight), dim=0 )
         actual["linear_relu_stack.4.bias"] = torch.cat((actual["linear_relu_stack.4.bias"],tensor_bias), dim=0 )
         model_second.load_state_dict(actual)
@@ -191,14 +196,14 @@ for t in range(total_fase):
         for i in range(epochs_second):       
             print(f"Epoch {i+1}\n-------------------------------")
             train_loop(data_2, model_second, loss_fn, optimizer)
+            #test_loop(eval_5_to_9_dataloader, model_second, loss_fn, save=False)
             test_loop(eval_dataloader, model_second, loss_fn)
 
-    if t == 0: torch.save(model_first.state_dict(), f'Fase_{t}_stack.pth'); print(f"Se guardo el modelo:\n Fase_{t}_stack.pth ")
-    if t == 1: torch.save(model_second.state_dict(), f'Fase_{t}_stack.pth'); print(f"Se guardo el modelo:\n Fase_{t}_stack.pth ") 
+    if t == 0: torch.save(model_first.state_dict(), f'Fase_{t}.pth'); print(f"Se guardo el modelo:\n Fase_{t}.pth ")
+    if t == 1: torch.save(model_second.state_dict(), f'Fase_{t}.pth'); print(f"Se guardo el modelo:\n Fase_{t}.pth ") 
 
-with open(f'logs/log_accuracy_loss_stack.txt', 'w') as archivo:
-        # Escribe el valor de la variable en el archivo
+with open(f'logs/log_accuracy_loss.txt', 'w') as archivo:
         archivo.write(str(log_accuracy_loss))
-print(f'Se guardo correctamente el acurracy')
 
+print(f'Se guardo correctamente el acurracy')
 print("Done!")

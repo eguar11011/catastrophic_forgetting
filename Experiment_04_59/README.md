@@ -1,29 +1,20 @@
 # El objetivo de este experimento
 
-Saber de varias formas, si la red olvida lo que ya ha aprendido. Es decir, si lo sobre escribe
-o que ocurre.
+El objetivo de este experimento es investigar la capacidad de una red neuronal para retener y generalizar el conocimiento adquirido durante el entrenamiento en dos fases. Se plantea la pregunta de si la red olvida lo aprendido en la primera fase cuando se entrena en la segunda, y cómo esto afecta la capacidad del modelo para clasificar las clases de ambos conjuntos de datos.
 
-Para esto vamos a entrenar el modelo con el conjunto de datos MNIST.
-Separandolo en dos fases. En la primera entrena las clases de 0 a 4 y en la 
-segunda fase entrena las clases de 5 a 9.
+El experimento utiliza el conjunto de datos MNIST y se divide en dos fases. En la primera fase, se entrena el modelo con las clases de dígitos del 0 al 4, y en la segunda fase, se entrena con las clases de dígitos del 5 al 9. Se realizan dos experimentos base con diferentes enfoques:
 
-Con los siguientes parametros:
+## Experimento 1: Entrenamiento para 5 clases y luego para 10 clases
+- En este experimento, se entrena el modelo inicialmente para las primeras 5 clases en la primera fase y luego se amplía el entrenamiento para las 10 clases en la segunda fase.
+- Se busca entender cómo el modelo maneja la transición de un conjunto de clases a otro, y si puede clasificar de manera efectiva tanto las clases de la fase anterior como las nuevas.
 
-| Parámetro          | Valor                                       |
-|---------------------|---------------------------------------------|
-| batch_size          | 32                                          |
-| learning_rate       | 1e-3                                        |
-| loss_fn             | CrossEntropy                                |
-| optimizer           | SG                                          |
 
-## Experimentos base
-- Entrenar un modelo en dos fases como lo anterior mencionado.
 
-En uno vamos a colocar que en cada fase entrene para 10 clases.
-En el otro vamos hacer que entrene para solo 5 clases y en la siguiente para 1o clases.
+Se proponen varias métricas y análisis para evaluar el rendimiento, que incluyen:
 
-## ¿Que queremos analizar?
+- La visualización de características, 
+- La comparación de predicciones en ambas fases.
+- El análisis detallado de los pesos de los dos modelos resultantes.
+- Analizar el clasificador.
 
-- Queremos ver si el clasificador se descuadra para las clases de la fase anterior.
-- Si aún puede clasificar con algún clasificador clases de la fase anterior y la fase realizada.
-- Si se superponen las caracteristicas de las clases.
+ El experimento busca identificar qué conocimientos son considerados importantes por el modelo y si existe alguna pérdida significativa de información entre las fases.
