@@ -59,7 +59,7 @@ class NeuralNetwork(nn.Module):
         logits = self.linear_relu_stack(x)
         return logits
 
-
+txt = "Fase_8"
 model = NeuralNetwork().to(device)
 Fase_8 = torch.load('Fase_8.pth')
 model.load_state_dict(Fase_8)
@@ -98,7 +98,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
-def test_loop(dataloader, model, loss_fn):
+def test_loop(dataloader, model, loss_fn, txt):
     # Set the model to evaluation mode - important for batch normalization and dropout layers
     # Unnecessary in this situation but added for best practices
     model.eval()
@@ -124,14 +124,14 @@ def test_loop(dataloader, model, loss_fn):
     log_accuracy_loss.append((100*correct, test_loss))
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-    with open(f'logs/epoch_{i}_Tuning.txt', 'w') as archivo:
+    with open(f'logs/epoch_{i}_Tuning_{txt}.txt', 'w') as archivo:
             # Escribe el valor de la variable en el archivo
             archivo.write(str(tarjet_prediction))
     print(f'El valor prediciones se ha guardado en el archivo.txt')
     
 
 
-epochs = 10
+epochs = 20
 data_t = train_dataloader
 log_accuracy_loss = []
 for t in range(total_fase):
@@ -142,12 +142,12 @@ for t in range(total_fase):
         if t == 0:
             print(f"Epoch {i+1}\n-------------------------------")
             train_loop(data_t, model, loss_fn, optimizer)
-            test_loop(eval_dataloader, model, loss_fn)
+            test_loop(eval_dataloader, model, loss_fn, txt)
 
-    if save_model: torch.save(model.state_dict(), f'Tuning.pth')
+    if save_model: torch.save(model.state_dict(), f'Tuning_{txt}.pth')
 
 
-with open(f'logs/log_accuracy_loss_Tuning.txt', 'w') as archivo:
+with open(f'logs/log_accuracy_loss_Tuning_{txt}.txt', 'w') as archivo:
         # Escribe el valor de la variable en el archivo
         archivo.write(str(log_accuracy_loss))
 print(f'Se guardo correctamente el acurracy')
