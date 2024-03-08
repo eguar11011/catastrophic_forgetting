@@ -1,5 +1,5 @@
 import torchvision
-from torchvision import transforms
+from torchvision import transforms, datasets
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -17,13 +17,13 @@ batch_size = 32
 
 
 # Conjunto de datos MNIST
-train_data = torchvision.datasets.MNIST(
+train_data = datasets.MNIST(
     root=data_dir,
     train=True,
     download=True,
     transform=transforms.ToTensor()
 )
-eval_data = torchvision.datasets.MNIST(
+eval_data = datasets.MNIST(
     root=data_dir,
     train=False,
     download=True,
@@ -112,7 +112,7 @@ def test_loop(dataloader, model, loss_fn):
     log_accuracy_loss.append((100*correct, test_loss))
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-    with open(f'logs/epoch_{i}_fase_{t}.txt', 'w') as archivo:
+    with open(f'logs/epoch_{i}_Total_{t}.txt', 'w') as archivo:
             # Escribe el valor de la variable en el archivo
             archivo.write(str(tarjet_prediction))
     print(f'El valor prediciones se ha guardado en el archivo.txt')
@@ -132,7 +132,7 @@ for t in range(total_fase):
             train_loop(data_t, model, loss_fn, optimizer)
             test_loop(eval_dataloader, model, loss_fn)
 
-    if save_model: torch.save(model.state_dict(), f'Fase_0.pth')
+    if save_model: torch.save(model.state_dict(), f'Total.pth')
 
 
 with open(f'logs/log_accuracy_loss.txt', 'w') as archivo:
