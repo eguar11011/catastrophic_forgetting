@@ -9,7 +9,7 @@ import os
 
 
 total_fase = 2 
-save_model = True
+save_model = False
 load_model = False
 device = "cuda"
 data_dir = "../data" 
