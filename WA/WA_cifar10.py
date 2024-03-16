@@ -6,32 +6,28 @@ from torch.utils.data import DataLoader
 
 import os
 import torch.nn.functional as F
-
+import torchvision.models as models
 
 total_fase = 2 
 save_model = True
 load_model = False
 device = "cuda"
 data_dir = "../data" 
-batch_size = 32
+batch_size = 10
 
 print("GPU activa:", torch.cuda.is_available(), "\nCantidad de GPs", torch.cuda.device_count())
 #------------------------------------------------------------------------------------------------
 
-# Conjunto de datos MNIST
-train_data = torchvision.datasets.MNIST(
-    root=data_dir,
-    train=True,
-    download=True,
-    transform=transforms.ToTensor()
-)
-eval_data = torchvision.datasets.MNIST(
-    root=data_dir,
-    train=False,
-    download=True,
-    transform=transforms.ToTensor()
-)
+# Transformaciones para normalizar los datos
+transform = transforms.Compose(
+    [transforms.ToTensor(),
+     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
+train_data = torchvision.datasets.CIFAR10(root='../data', train=True, download=True, transform=transform)
+train_dataloader = torch.utils.data.DataLoader(train_data, batch_size=32, shuffle=True, num_workers=2)
+
+eval_data = torchvision.datasets.CIFAR10(root='../data', train=False, download=True, transform=transform)
+eval_dataloader = torch.utils.data.DataLoader(eval_data, batch_size=1000, shuffle=False, num_workers=2)
 
 # Separar las clases 0-4 y 5-9 para los conjuntos de entrenamiento y evaluación
 
@@ -57,6 +53,7 @@ eval_0_to_4_dataloader = DataLoader(eval_0_to_4, batch_size, shuffle=True)
 eval_5_to_9_dataloader = DataLoader(eval_5_to_9, batch_size, shuffle=True)
 eval_dataloader = DataLoader(eval_data, batch_size=10000, shuffle=True)
 print("Se cargaron los datos correctamente")
+
 #-----------------------------------------------------------------------------------------
 
 
@@ -68,14 +65,18 @@ class WeightAligning_NeuralNetwork(nn.Module):
         self.output_size = output_size
         self.num_old_classes = num_old_classes
 
+        resnet = models.resnet18(pretrained=False)
+        self.features = nn.Sequential(*list(resnet.children())[:-1])  # Obtener todas las capas excepto la capa de clasificación
+
         self.flatten = nn.Flatten()
         # Definir las capas lineales
-        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.fc1 = nn.Linear(resnet.fc.in_features, hidden_size) # (512, 512) 
         self.fc2 = nn.Linear(hidden_size, hidden_size)
         self.fc3 = nn.Linear(hidden_size, output_size)
         
     def forward(self, x):
         # Propagación hacia adelante en la red
+        x = self.features(x)
         x = self.flatten(x)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -114,7 +115,7 @@ class WeightAligning_NeuralNetwork(nn.Module):
         return logits
 
 # Definir las dimensiones de la red y el número de clases antiguas
-input_size = 28*28  # Tamaño de entrada (por ejemplo, para imágenes de 28x28 píxeles)
+input_size = 32 *8 *8  # Tamaño de entrada (por ejemplo, para imágenes de 28x28 píxeles)
 hidden_size = 512  # Tamaño de las capas ocultas
 output_size = 5  # Tamaño de salida (ejemplo: 20 clases nuevas)
 num_old_classes = 5  # Número de clases antiguas
@@ -186,7 +187,7 @@ def test_loop(dataloader, model, loss_fn, save=True):
         os.makedirs(directorio)
     # Guardar tarjet_predictions
     if save:    
-        with open(f'logs/epoch_{i}_fase_{t}.txt', 'w') as archivo:
+        with open(f'logs/epoch_{i}_fase_{t}_cifar10.txt', 'w') as archivo:
                 # Escribe el valor de la variable en el archivo
                 archivo.write(str(tarjet_prediction))
         print(f'El valor prediciones se ha guardado en el archivo.txt')
@@ -197,7 +198,6 @@ epochs_first = 6
 epochs_second = 10
 data_1 = train_0_to_4_dataloader
 data_2 = train_5_to_9_dataloader
-data_t = train_dataloader
 log_accuracy_loss = []
 
 for t in range(total_fase):
@@ -212,7 +212,7 @@ for t in range(total_fase):
 
     elif t == 1:
 
-        actual = torch.load("Fase_0.pth")
+        actual = torch.load("Fase_0_cifar10.pth")
         #  scaling_factor = 0.01 
         tensor_weight = torch.rand(5,512).to(device)  #*scaling_factor
         tensor_bias = torch.rand(5).to(device)  #*scaling_factor
@@ -231,10 +231,10 @@ for t in range(total_fase):
             #test_loop(eval_5_to_9_dataloader, model_second, loss_fn, save=False)
             test_loop(eval_dataloader, model, loss_fn)
 
-    if t == 0: torch.save(model.state_dict(), f'Fase_{t}.pth'); print(f"Se guardo el modelo:\n Fase_{t}.pth ")
-    if t == 1: torch.save(model.state_dict(), f'Fase_{t}.pth'); print(f"Se guardo el modelo:\n Fase_{t}.pth ") 
+    if t == 0: torch.save(model.state_dict(), f'Fase_{t}_cifar10.pth'); print(f"Se guardo el modelo:\n Fase_{t}_cifar10.pth ")
+    if t == 1: torch.save(model.state_dict(), f'Fase_{t}_cifar10.pth'); print(f"Se guardo el modelo:\n Fase_{t}_cifar10.pth ") 
 
-with open(f'logs/log_accuracy_loss.txt', 'w') as archivo:
+with open(f'logs/log_accuracy_loss_cifar10.txt', 'w') as archivo:
         archivo.write(str(log_accuracy_loss))
 
 print(f'Se guardo correctamente el acurracy')
