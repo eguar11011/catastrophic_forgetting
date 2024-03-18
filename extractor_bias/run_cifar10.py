@@ -114,7 +114,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
-def test_loop(dataloader, model, loss_fn, save=True):
+def test_loop(dataloader, model, loss_fn, t):
     # Set the model to evaluation mode - important for batch normalization and dropout layers
     # Unnecessary in this situation but added for best practices
     model.eval()
@@ -140,20 +140,18 @@ def test_loop(dataloader, model, loss_fn, save=True):
     log_accuracy_loss.append((100*correct, test_loss))
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
     
-
+    
     # Definir la ruta del archivo
     directorio= 'logs'
     if not os.path.exists(directorio):
         os.makedirs(directorio)
-    # Guardar tarjet_predictions
-    if save:    
-        with open(f'logs/epoch_{i}_fase_{t}_cifar10.txt', 'w') as archivo:
-                # Escribe el valor de la variable en el archivo
-                archivo.write(str(tarjet_prediction))
-        print(f'El valor prediciones se ha guardado en el archivo.txt')
+    with open(f'logs/epoch_{i}_CC_{t}.txt', 'w') as archivo:
+            # Escribe el valor de la variable en el archivo
+            archivo.write(str(tarjet_prediction))
+    print(f'El valor prediciones se ha guardado en el archivo.txt')
     
 
-epochs = 10
+epochs = 30
 
 data_1 = train_0_to_4_dataloader
 data_2 = train_5_to_9_dataloader
